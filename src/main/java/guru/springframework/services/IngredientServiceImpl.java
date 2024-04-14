@@ -73,15 +73,16 @@ public class IngredientServiceImpl implements IngredientService {
 
     @Override
     public Mono<IngredientCommand> saveIngredientCommand(IngredientCommand command) {
-        Optional<Recipe> recipeOptional = recipeReactiveRepository.findById(command.getRecipeId()).blockOptional();
+       // Optional<Recipe> recipeOptional = recipeReactiveRepository.findById(command.getRecipeId()).share().blockOptional();
+       Recipe recipe = recipeReactiveRepository.findById(command.getRecipeId()).share().block();
 
-        if(!recipeOptional.isPresent()){
+        if(recipe==null){
 
             //todo toss error if not found!
             log.error("Recipe not found for id: " + command.getRecipeId());
             return Mono.just(new IngredientCommand());
         } else {
-            Recipe recipe = recipeOptional.get();
+
 
             Optional<Ingredient> ingredientOptional = recipe
                     .getIngredients()
@@ -93,9 +94,8 @@ public class IngredientServiceImpl implements IngredientService {
                 Ingredient ingredientFound = ingredientOptional.get();
                 ingredientFound.setDescription(command.getDescription());
                 ingredientFound.setAmount(command.getAmount());
-                ingredientFound.setUom(unitOfMeasureReactiveRepository
-                        .findById(command.getUom().getId()).blockOptional()
-                        .orElseThrow(() -> new RuntimeException("UOM NOT FOUND"))); //todo address this
+                ingredientFound.setUom(unitOfMeasureReactiveRepository.findById(command.getUom().getId()).share().block());
+                        //.orElseThrow(() -> new RuntimeException("UOM NOT FOUND"))); //todo address this
             } else {
                 //add new Ingredient
                 Ingredient ingredient = ingredientCommandToIngredient.convert(command);
@@ -103,7 +103,7 @@ public class IngredientServiceImpl implements IngredientService {
                 recipe.addIngredient(ingredient);
             }
 
-            Recipe savedRecipe = recipeReactiveRepository.save(recipe).block();
+            Recipe savedRecipe = recipeReactiveRepository.save(recipe).share().block();
 
             Optional<Ingredient> savedIngredientOptional = savedRecipe.getIngredients().stream()
                     .filter(recipeIngredients -> recipeIngredients.getId().equals(command.getId()))
