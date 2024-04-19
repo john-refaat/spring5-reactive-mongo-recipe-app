@@ -1,6 +1,8 @@
 package guru.springframework.domain;
 
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
@@ -14,6 +16,7 @@ import java.util.Set;
  */
 @Getter
 @Setter
+@NoArgsConstructor
 @Document
 public class Recipe {
 
@@ -33,6 +36,23 @@ public class Recipe {
 
     @DBRef
     private Set<Category> categories = new HashSet<>();
+
+    @Builder
+    public Recipe(String id, String description, Integer prepTime, Integer cookTime, Integer servings, String source, String url, String directions, Set<Ingredient> ingredients, Byte[] image, Difficulty difficulty, Notes notes, Set<Category> categories) {
+        this.id = id;
+        this.description = description;
+        this.prepTime = prepTime;
+        this.cookTime = cookTime;
+        this.servings = servings;
+        this.source = source;
+        this.url = url;
+        this.directions = directions;
+        this.ingredients = ingredients;
+        this.image = image;
+        this.difficulty = difficulty;
+        this.notes = notes;
+        this.categories = categories;
+    }
 
     public void setNotes(Notes notes) {
         if (notes != null) {
